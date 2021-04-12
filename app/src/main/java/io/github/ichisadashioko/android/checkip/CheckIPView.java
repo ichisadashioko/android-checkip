@@ -13,16 +13,23 @@ import android.view.View;
 
 public class CheckIPView extends View {
     public int statusColor = Color.BLACK;
+
+    public int measuredWidth = 0;
+    public int measureHeight = 0;
+    public float textLeftPos = 0;
+    public float textBottomPos = 0;
+    public TextPaint textPaint = null;
+    public int textFontSize = 0;
     public String ipinfoResponseHexString = null;
+    public boolean showReponse = false;
 
     public Typeface responseTypeFace = Typeface.MONOSPACE;
-    public int responseFontSize = 20;
 
     public static int FindSuitableFontSize(String text, int widthLimit, Typeface typeface) {
         int retval = 0;
 
-        if (text.length() > 0) {
-            retval = widthLimit / text.length();
+        if ((text == null) || (text.length() > 0)) {
+            retval = (widthLimit / text.length()) * 2;
 
             TextPaint textPaint = new TextPaint();
             textPaint.setTypeface(typeface);
@@ -61,33 +68,48 @@ public class CheckIPView extends View {
         }
     }
 
-    public void setIPINFOResponse(String hexStr) {
-        this.statusColor = Color.WHITE;
-        this.ipinfoResponseHexString = hexStr;
+    public void measureTextAssets() {
+        this.measuredWidth = this.getWidth();
+        this.measureHeight = this.getHeight();
 
-        if (Looper.myLooper() == Looper.getMainLooper()) {
-            invalidate();
-        } else {
-            postInvalidate();
-        }
+        this.textFontSize =
+                FindSuitableFontSize(
+                        this.ipinfoResponseHexString, this.measuredWidth, responseTypeFace);
+        this.textPaint = new TextPaint();
+        this.textPaint.setTypeface(responseTypeFace);
+        this.textPaint.setTextSize(this.textFontSize);
+        this.textPaint.setColor(Color.BLACK);
+
+        float renderedTextWidth = this.textPaint.measureText(this.ipinfoResponseHexString);
+        this.textLeftPos = (((float) this.measuredWidth) - renderedTextWidth) / 2f;
+        this.textLeftPos = Math.max(0, this.textLeftPos);
+
+        this.textBottomPos = (((float) this.measureHeight) - ((float) this.textFontSize)) / 2f;
+        this.textBottomPos = this.textBottomPos + this.textFontSize;
+        this.textBottomPos = Math.min(this.measureHeight, this.textBottomPos);
     }
 
     @Override
     protected void onDraw(Canvas canvas) {
         super.onDraw(canvas);
 
-        if (this.ipinfoResponseHexString == null) {
+        if (showReponse) {
+            if ((this.measuredWidth != this.getWidth())
+                    || (this.measureHeight != this.getHeight())) {
+                this.measureTextAssets();
+            }
+
             Paint p = new Paint();
-            p.setColor(this.statusColor);
+            p.setColor(Color.WHITE);
             p.setStyle(Paint.Style.FILL);
             canvas.drawRect(new Rect(0, 0, this.getWidth(), this.getHeight()), p);
+            canvas.drawText(
+                    this.ipinfoResponseHexString, this.textLeftPos, this.textBottomPos, textPaint);
         } else {
             Paint p = new Paint();
             p.setColor(this.statusColor);
             p.setStyle(Paint.Style.FILL);
             canvas.drawRect(new Rect(0, 0, this.getWidth(), this.getHeight()), p);
-
-            p = new Paint();
         }
     }
 }

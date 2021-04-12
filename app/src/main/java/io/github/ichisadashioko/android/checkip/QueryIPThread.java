@@ -2,12 +2,14 @@ package io.github.ichisadashioko.android.checkip;
 
 import android.graphics.Color;
 
+import org.json.JSONObject;
+
+import java.io.ByteArrayOutputStream;
 import java.io.InputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
 
 public class QueryIPThread extends Thread {
-    public static final char[] HEX_ARRAY = "0123456789ABCDEF".toCharArray();
     public final MainActivity app;
 
     public QueryIPThread(MainActivity app) {
@@ -28,7 +30,7 @@ public class QueryIPThread extends Thread {
             System.out.println(status);
             InputStream inputStream = con.getInputStream();
 
-            StringBuilder sb = new StringBuilder();
+            ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
 
             byte[] buffer = new byte[1024];
             while (true) {
@@ -37,18 +39,20 @@ public class QueryIPThread extends Thread {
                     break;
                 }
 
-                char[] hexChars = new char[numberOfReadBytes * 2];
-                for (int i = 0; i < numberOfReadBytes; i++) {
-                    int v = buffer[i] & 0xff;
-                    hexChars[i * 2] = HEX_ARRAY[v >>> 4];
-                    hexChars[i * 2 + 1] = HEX_ARRAY[v & 0x0f];
-                }
-
-                sb.append(new String(hexChars));
+                byteArrayOutputStream.write(buffer, 0, numberOfReadBytes);
             }
 
-            System.out.println(sb.toString());
-            app.ipView.changeStatusColor(Color.GREEN);
+            String jsonStr = new String(byteArrayOutputStream.toByteArray());
+            JSONObject jsonObject = new JSONObject(jsonStr);
+            System.out.println(jsonObject);
+
+            Object ipValue = jsonObject.get("ip");
+            if (ipValue instanceof String) {
+                app.ipView.ipinfoResponseHexString = (String) ipValue;
+                app.ipView.changeStatusColor(Color.GREEN);
+            } else {
+                throw new Exception("Broken ip checking API");
+            }
         } catch (Exception ex) {
             ex.printStackTrace(System.err);
             app.ipView.changeStatusColor(Color.RED);

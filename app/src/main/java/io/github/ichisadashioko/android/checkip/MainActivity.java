@@ -22,6 +22,9 @@ public class MainActivity extends Activity {
             // TODO initialize request to external server to get our current IP
             ipView.changeStatusColor(Color.YELLOW);
             (new QueryIPThread(this)).start();
+        } else if ((ipView.statusColor == Color.GREEN) && (!ipView.showReponse)) {
+            ipView.showReponse = true;
+            ipView.invalidate();
         }
     }
 }
