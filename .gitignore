@@ -1,0 +1,14 @@
+app/build
+.ipynb_checkpoints
+.gradle
+.project
+.DS_Store
+.settings
+.cxx
+*.iml
+.classpath
+.externalNativeBuild
+local.properties
+gradle
+captures
+.idea
